@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="es-AR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Panel Admin – Limpix</title>
-  <meta name="robots" content="noindex, nofollow">
+  <meta name="robots" content="noindex, nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
@@ -13,284 +13,196 @@
 </head>
 <body class="admin-body">
 
-<!-- LOGIN SCREEN -->
-<div id="loginScreen" class="login-screen">
-  <form class="login-card" id="loginForm" novalidate>
-    <div class="login-logo"><span class="logo-mark">✦</span>limpix</div>
-    <h2>Panel de administración</h2>
-    <p>Ingresá con el usuario de Supabase que tenga acceso al panel.</p>
-    <div class="form-group">
-      <label>Email</label>
-      <input type="email" id="loginEmail" placeholder="admin@limpix.com" autocomplete="email">
-    </div>
-    <div class="form-group">
-      <label>Contraseña</label>
-      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"><small class="hint">Si al tocar ingresar no responde, ahora va a mostrar el error real en pantalla.</small>
-    </div>
-    <div class="login-error hidden" id="loginError">Email o contraseña incorrectos.</div>
-    <div class="login-help">Si el login falla en GitHub Pages, el problema casi siempre está en Auth o en la config del proyecto, no en el navegador.</div>
-    <button class="btn-submit" id="loginBtn" type="submit" onclick="return window.__adminLoginFallback(event)">Ingresar</button>
-    <a href="index.html" class="login-back">← Volver al sitio</a>
-  </form>
-</div>
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo"><span class="logo-mark">✦</span>limpix</div>
+      <h2>Panel de administración</h2>
+      <p>Ingresá con el usuario de Supabase que tenga acceso al panel.</p>
 
-<!-- ADMIN PANEL -->
-<div id="adminPanel" class="hidden">
-
-  <!-- Sidebar -->
-  <aside class="admin-sidebar">
-    <div class="as-logo"><span class="logo-mark">✦</span>limpix <span class="as-badge">Admin</span></div>
-    <nav class="as-nav">
-      <button class="as-item active" data-section="dashboard" onclick="showSection('dashboard', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Dashboard
-      </button>
-      <button class="as-item" data-section="providers" onclick="showSection('providers', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Proveedores
-      </button>
-      <button class="as-item" data-section="reviews" onclick="showSection('reviews', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Reseñas
-      </button>
-    </nav>
-    <button class="as-logout" onclick="doLogout()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      Cerrar sesión
-    </button>
-  </aside>
-
-  <!-- Main content -->
-  <main class="admin-main">
-
-    <!-- DASHBOARD -->
-    <section id="section-dashboard" class="admin-section">
-      <div class="admin-header"><h1>Dashboard</h1><span id="adminDate"></span></div>
-      <div class="dashboard-stats">
-        <div class="ds-card"><div class="ds-icon">🏢</div><div class="ds-info"><strong id="ds-providers">–</strong><span>Proveedores activos</span></div></div>
-        <div class="ds-card"><div class="ds-icon">⭐</div><div class="ds-info"><strong id="ds-reviews">–</strong><span>Reseñas totales</span></div></div>
-        <div class="ds-card"><div class="ds-icon">⏳</div><div class="ds-info"><strong id="ds-pending">–</strong><span>Reseñas pendientes</span></div></div>
-        <div class="ds-card"><div class="ds-icon">📊</div><div class="ds-info"><strong id="ds-avg">–</strong><span>Calificación promedio</span></div></div>
-      </div>
-      <div class="dashboard-actions">
-        <div class="da-card">
-          <h3>Acciones rápidas</h3>
-          <button class="btn-primary" onclick="showSection('providers'); openNewProvider()">+ Agregar proveedor</button>
-          <button class="btn-outline" onclick="showSection('reviews', document.querySelector('[data-section=reviews]'))">Ver reseñas pendientes</button>
-        </div>
-        <div class="da-card">
-          <h3>Últimas reseñas</h3>
-          <div id="latestReviews"><div class="spinner small"></div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PROVIDERS -->
-    <section id="section-providers" class="admin-section hidden">
-      <div class="admin-header">
-        <h1>Proveedores</h1>
-        <button class="btn-primary" onclick="openNewProvider()">+ Agregar proveedor</button>
-      </div>
-      <div class="admin-search-row">
-        <input type="text" id="adminSearchProv" placeholder="🔍 Buscar proveedor..." class="search-inline" oninput="filterAdminProviders()">
-      </div>
-      <div id="adminProvidersList" class="admin-providers-list">
-        <div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>
-      </div>
-    </section>
-
-    <!-- REVIEWS -->
-    <section id="section-reviews" class="admin-section hidden">
-      <div class="admin-header"><h1>Reseñas</h1></div>
-      <div class="reviews-filter-row">
-        <button class="chip active" data-filter="all" onclick="filterReviews('all', this)">Todas</button>
-        <button class="chip" data-filter="pending" onclick="filterReviews('pending', this)">Pendientes</button>
-        <button class="chip" data-filter="approved" onclick="filterReviews('approved', this)">Aprobadas</button>
-        <button class="chip" data-filter="rejected" onclick="filterReviews('rejected', this)">Rechazadas</button>
-      </div>
-      <div id="adminReviewsList" class="admin-reviews-list">
-        <div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>
-      </div>
-    </section>
-
-  </main>
-</div>
-
-<!-- MODAL PROVEEDOR -->
-<div class="modal-overlay hidden" id="providerModalOverlay" onclick="closeProviderModal()"></div>
-<div class="admin-modal hidden" id="providerModal">
-  <div class="am-header">
-    <h2 id="modalTitle">Nuevo proveedor</h2>
-    <button class="am-close" onclick="closeProviderModal()">✕</button>
-  </div>
-  <div class="am-body">
-    <div class="am-tabs">
-      <button class="am-tab active" onclick="switchTab('basic', this)">Información básica</button>
-      <button class="am-tab" onclick="switchTab('services', this)">Servicios y precios</button>
-      <button class="am-tab" onclick="switchTab('media', this)">Fotos y galería</button>
-    </div>
-
-    <!-- TAB: básico -->
-    <div id="tab-basic" class="am-tab-content">
-      <div class="form-row">
+      <form id="loginForm">
         <div class="form-group">
-          <label>Nombre del proveedor *</label>
-          <input type="text" id="pName" placeholder="Ej: CleanPro Buenos Aires">
+          <label for="loginEmail">Email</label>
+          <input
+            type="email"
+            id="loginEmail"
+            placeholder="admin@limpix.com"
+            autocomplete="email"
+            required
+          >
         </div>
-        <div class="form-group">
-          <label>Zona / Cobertura *</label>
-          <input type="text" id="pZone" placeholder="Ej: CABA y GBA Norte">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Descripción corta * <small>(aparece en la card del catálogo)</small></label>
-        <textarea id="pDesc" rows="2" placeholder="Breve descripción para el catálogo..."></textarea>
-      </div>
-      <div class="form-group">
-        <label>Descripción larga <small>(aparece en el perfil)</small></label>
-        <textarea id="pAbout" rows="4" placeholder="Historia, experiencia, valores del equipo..."></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>WhatsApp * <small>(sin espacios ni guiones)</small></label>
-          <input type="text" id="pWhatsapp" placeholder="5491123456789">
-          <small class="hint">Formato: código país + código área + número. Ej: 5491123456789</small>
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="pEmail" placeholder="contacto@empresa.com">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Años de experiencia</label>
-          <input type="number" id="pYears" placeholder="5" min="0" max="99">
-        </div>
-        <div class="form-group">
-          <label>¿Activo?</label>
-          <select id="pActive">
-            <option value="true">Sí – visible en el catálogo</option>
-            <option value="false">No – oculto</option>
-          </select>
-        </div>
-      </div>
-    </div>
 
-    <!-- TAB: servicios -->
-    <div id="tab-services" class="am-tab-content hidden">
-      <div class="form-group">
-        <label>Categorías / Servicios que ofrece</label>
-        <div class="service-checkboxes" id="serviceChecks">
-          <label class="check-item"><input type="checkbox" value="Limpieza hogareña"> Limpieza hogareña</label>
-          <label class="check-item"><input type="checkbox" value="Limpieza de oficinas"> Limpieza de oficinas</label>
-          <label class="check-item"><input type="checkbox" value="Limpieza profunda"> Limpieza profunda</label>
-          <label class="check-item"><input type="checkbox" value="Post-obra"> Post-obra</label>
-          <label class="check-item"><input type="checkbox" value="Mudanza"> Mudanza</label>
-          <label class="check-item"><input type="checkbox" value="Servicio de mucama"> Servicio de mucama</label>
-          <label class="check-item"><input type="checkbox" value="Limpieza ecológica"> Limpieza ecológica</label>
-          <label class="check-item"><input type="checkbox" value="Industrial"> Industrial</label>
-        </div>
-      </div>
-      <div class="form-row">
         <div class="form-group">
-          <label>Precio desde (ARS)</label>
-          <input type="number" id="pPriceFrom" placeholder="10000">
+          <label for="loginPassword">Contraseña</label>
+          <input
+            type="password"
+            id="loginPassword"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          >
         </div>
-        <div class="form-group">
-          <label>Precio hasta (ARS, opcional)</label>
-          <input type="number" id="pPriceTo" placeholder="50000">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Información adicional</label>
-        <div class="extra-info-list" id="extraInfoList">
-          <!-- items dinámicos -->
-        </div>
-        <button class="btn-outline small" onclick="addExtraInfo()">+ Agregar dato</button>
-        <small class="hint">Ej: "Productos ecológicos: Sí", "Días de trabajo: Lun a Sáb"</small>
-      </div>
-    </div>
 
-    <!-- TAB: media -->
-    <div id="tab-media" class="am-tab-content hidden">
-      <div class="form-group">
-        <label>URL del logo / foto de perfil</label>
-        <input type="url" id="pAvatar" placeholder="https://...">
-        <small class="hint">URL de imagen. Recomendado: subir a <a href="https://imgur.com" target="_blank">imgur.com</a> y pegar el link directo.</small>
-      </div>
-      <div class="form-group">
-        <label>Color de fondo del avatar <small>(si no tiene foto)</small></label>
-        <div class="color-palette" id="colorPalette">
-          <span class="cp-item selected" data-color="#00897b" style="background:#00897b"></span>
-          <span class="cp-item" data-color="#2196f3" style="background:#2196f3"></span>
-          <span class="cp-item" data-color="#9c27b0" style="background:#9c27b0"></span>
-          <span class="cp-item" data-color="#ff5722" style="background:#ff5722"></span>
-          <span class="cp-item" data-color="#ff9800" style="background:#ff9800"></span>
-          <span class="cp-item" data-color="#e91e63" style="background:#e91e63"></span>
-          <span class="cp-item" data-color="#607d8b" style="background:#607d8b"></span>
-        </div>
-        <input type="hidden" id="pColor" value="#00897b">
-      </div>
-      <div class="form-group">
-        <label>Fotos de trabajos (galería) – una URL por línea</label>
-        <textarea id="pGallery" rows="5" placeholder="https://imagen1.jpg&#10;https://imagen2.jpg&#10;..."></textarea>
-        <small class="hint">Pegá URLs de imágenes, una por línea.</small>
-      </div>
+        <div class="login-error hidden" id="loginError">Email o contraseña incorrectos.</div>
+
+        <button class="btn-submit" id="loginBtn" type="submit">Ingresar</button>
+      </form>
+
+      <a href="index.html" class="login-back">← Volver al sitio</a>
     </div>
   </div>
-  <div class="am-footer">
-    <button class="btn-outline" onclick="closeProviderModal()">Cancelar</button>
-    <button class="btn-primary" onclick="saveProvider()">Guardar proveedor</button>
+
+  <!-- ADMIN PANEL -->
+  <div id="adminPanel" class="hidden">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="as-logo">
+        <span class="logo-mark">✦</span>limpix
+        <span class="as-badge">Admin</span>
+      </div>
+
+      <nav class="as-nav">
+        <button class="as-item active" data-section="dashboard" onclick="showSection('dashboard', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          Dashboard
+        </button>
+
+        <button class="as-item" data-section="providers" onclick="showSection('providers', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          Proveedores
+        </button>
+
+        <button class="as-item" data-section="reviews" onclick="showSection('reviews', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          Reseñas
+        </button>
+      </nav>
+
+      <button class="as-logout" onclick="doLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        Cerrar sesión
+      </button>
+    </aside>
+
+    <!-- Main -->
+    <main class="admin-main">
+
+      <!-- DASHBOARD -->
+      <section id="section-dashboard" class="admin-section">
+        <div class="admin-header">
+          <h1>Dashboard</h1>
+          <span id="adminDate"></span>
+        </div>
+
+        <div class="dashboard-stats">
+          <div class="ds-card">
+            <div class="ds-icon">🏢</div>
+            <div class="ds-info">
+              <strong id="ds-providers">–</strong>
+              <span>Proveedores activos</span>
+            </div>
+          </div>
+
+          <div class="ds-card">
+            <div class="ds-icon">⭐</div>
+            <div class="ds-info">
+              <strong id="ds-reviews">–</strong>
+              <span>Reseñas totales</span>
+            </div>
+          </div>
+
+          <div class="ds-card">
+            <div class="ds-icon">⏳</div>
+            <div class="ds-info">
+              <strong id="ds-pending">–</strong>
+              <span>Reseñas pendientes</span>
+            </div>
+          </div>
+
+          <div class="ds-card">
+            <div class="ds-icon">📊</div>
+            <div class="ds-info">
+              <strong id="ds-avg">–</strong>
+              <span>Calificación promedio</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-actions">
+          <div class="da-card">
+            <h3>Acciones rápidas</h3>
+            <button class="btn-primary" onclick="showSection('providers', document.querySelector('[data-section=providers]'))">
+              Ver proveedores
+            </button>
+            <button class="btn-outline" onclick="showSection('reviews', document.querySelector('[data-section=reviews]'))">
+              Ver reseñas
+            </button>
+          </div>
+
+          <div class="da-card">
+            <h3>Últimas reseñas</h3>
+            <div id="latestReviews">
+              <div class="spinner small"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROVIDERS -->
+      <section id="section-providers" class="admin-section hidden">
+        <div class="admin-header">
+          <h1>Proveedores</h1>
+        </div>
+
+        <div class="admin-search-row">
+          <input type="text" id="adminSearchProv" placeholder="🔍 Buscar proveedor..." class="search-inline">
+        </div>
+
+        <div id="adminProvidersList" class="admin-providers-list">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Cargando...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- REVIEWS -->
+      <section id="section-reviews" class="admin-section hidden">
+        <div class="admin-header">
+          <h1>Reseñas</h1>
+        </div>
+
+        <div id="adminReviewsList" class="admin-reviews-list">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Cargando...</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
   </div>
-</div>
 
-<!-- TOAST -->
-<div class="toast hidden" id="adminToast"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="supabase.js"></script>
-<script src="admin.js"></script>
-<script>
-(function(){
-  function showBootError(msg){
-    var el = document.getElementById('loginError');
-    if (!el) return;
-    el.textContent = msg;
-    el.classList.remove('hidden');
-  }
-  window.__adminLoginFallback = function(event){
-    if (event) event.preventDefault();
-    var btn = document.getElementById('loginBtn');
-    if (btn) btn.textContent = 'Ingresando...';
-    if (typeof window.doLogin === 'function') {
-      try {
-        var result = window.doLogin();
-        if (result && typeof result.finally === 'function') {
-          result.finally(function(){
-            var b = document.getElementById('loginBtn');
-            if (b && !b.disabled) b.textContent = 'Ingresar';
-          });
-        }
-      } catch (err) {
-        console.error(err);
-        showBootError('Se rompió el script del admin antes de procesar el login.');
-        var b2 = document.getElementById('loginBtn');
-        if (b2) b2.textContent = 'Ingresar';
-      }
-      return false;
-    }
-    showBootError('admin.js no se cargó correctamente. Revisá que el archivo esté subido en GitHub y que no haya errores en la consola.');
-    var b3 = document.getElementById('loginBtn');
-    if (b3) b3.textContent = 'Ingresar';
-    return false;
-  };
-  document.addEventListener('DOMContentLoaded', function(){
-    var form = document.getElementById('loginForm');
-    if (form) {
-      form.addEventListener('submit', window.__adminLoginFallback);
-    }
-  });
-})();
-</script>
+  <!-- Solo estos scripts, una vez cada uno -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="supabase.js"></script>
+  <script src="admin.js"></script>
 </body>
 </html>
