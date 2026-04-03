@@ -15,7 +15,7 @@
 
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" class="login-screen">
-  <div class="login-card">
+  <form class="login-card" id="loginForm" novalidate>
     <div class="login-logo"><span class="logo-mark">✦</span>limpix</div>
     <h2>Panel de administración</h2>
     <p>Ingresá con el usuario de Supabase que tenga acceso al panel.</p>
@@ -29,9 +29,9 @@
     </div>
     <div class="login-error hidden" id="loginError">Email o contraseña incorrectos.</div>
     <div class="login-help">Si el login falla en GitHub Pages, el problema casi siempre está en Auth o en la config del proyecto, no en el navegador.</div>
-    <button class="btn-submit" id="loginBtn" type="button">Ingresar</button>
+    <button class="btn-submit" id="loginBtn" type="submit" onclick="return window.__adminLoginFallback(event)">Ingresar</button>
     <a href="index.html" class="login-back">← Volver al sitio</a>
-  </div>
+  </form>
 </div>
 
 <!-- ADMIN PANEL -->
@@ -250,5 +250,47 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="supabase.js"></script>
 <script src="admin.js"></script>
+<script>
+(function(){
+  function showBootError(msg){
+    var el = document.getElementById('loginError');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+  window.__adminLoginFallback = function(event){
+    if (event) event.preventDefault();
+    var btn = document.getElementById('loginBtn');
+    if (btn) btn.textContent = 'Ingresando...';
+    if (typeof window.doLogin === 'function') {
+      try {
+        var result = window.doLogin();
+        if (result && typeof result.finally === 'function') {
+          result.finally(function(){
+            var b = document.getElementById('loginBtn');
+            if (b && !b.disabled) b.textContent = 'Ingresar';
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        showBootError('Se rompió el script del admin antes de procesar el login.');
+        var b2 = document.getElementById('loginBtn');
+        if (b2) b2.textContent = 'Ingresar';
+      }
+      return false;
+    }
+    showBootError('admin.js no se cargó correctamente. Revisá que el archivo esté subido en GitHub y que no haya errores en la consola.');
+    var b3 = document.getElementById('loginBtn');
+    if (b3) b3.textContent = 'Ingresar';
+    return false;
+  };
+  document.addEventListener('DOMContentLoaded', function(){
+    var form = document.getElementById('loginForm');
+    if (form) {
+      form.addEventListener('submit', window.__adminLoginFallback);
+    }
+  });
+})();
+</script>
 </body>
 </html>
