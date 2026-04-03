@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Limpix – Servicios de Limpieza Verificados en Argentina</title>
+  <meta name="description" content="Encontrá y contactá proveedores de limpieza verificados en tu zona. Hogareña, oficinas, post-obra, mudanzas y más. Presupuesto directo por WhatsApp.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="logo"><span class="logo-mark">✦</span>limpix</a>
+    <div class="nav-links">
+      <a href="#catalogo">Proveedores</a>
+      <a href="#como-funciona">¿Cómo funciona?</a>
+    </div>
+    <a href="admin.html" class="btn-admin-link">Panel Admin</a>
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#catalogo">Proveedores</a>
+    <a href="#como-funciona">¿Cómo funciona?</a>
+    <a href="admin.html">Panel Admin</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-bg">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+    <div class="hero-grid"></div>
+  </div>
+  <div class="container hero-wrap">
+    <div class="hero-text">
+      <div class="hero-badge"><span class="pulse-dot"></span>+40 proveedores verificados</div>
+      <h1>Tu hogar,<br><em>impecable.</em><br>Sin vueltas.</h1>
+      <p class="hero-sub">Comparás servicios de limpieza reales, consultás directo por WhatsApp y elegís el que más te conviene. Rápido, transparente y sin intermediarios.</p>
+      <div class="search-wrap">
+        <div class="search-box" id="searchBox">
+          <div class="sf">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="heroSearch" placeholder="Buscá por servicio o zona..." autocomplete="off">
+          </div>
+          <div class="sdiv"></div>
+          <div class="sf sf-sel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+            <select id="heroCategory">
+              <option value="">Todos los servicios</option>
+              <option>Limpieza hogareña</option>
+              <option>Limpieza de oficinas</option>
+              <option>Limpieza profunda</option>
+              <option>Post-obra</option>
+              <option>Mudanza</option>
+              <option>Servicio de mucama</option>
+              <option>Limpieza ecológica</option>
+              <option>Industrial</option>
+            </select>
+          </div>
+          <button class="btn-search" onclick="applyHeroSearch()">Buscar →</button>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="hs"><strong id="statProveedores">40+</strong><span>proveedores</span></div>
+        <div class="hs-sep"></div>
+        <div class="hs"><strong id="statResenas">1.2k+</strong><span>reseñas</span></div>
+        <div class="hs-sep"></div>
+        <div class="hs"><strong>4.9★</strong><span>calificación</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hv-phone">
+        <div class="hvp-top"><span class="hvp-dot"></span><span class="hvp-brand">limpix</span><span class="hvp-dot"></span></div>
+        <div class="hvp-body" id="heroPhoneCards">
+          <!-- Se llena con JS -->
+          <div class="hvp-skeleton"></div><div class="hvp-skeleton"></div><div class="hvp-skeleton"></div>
+        </div>
+      </div>
+      <div class="hv-card hvc-1">
+        <div class="hvc-ico">✓</div>
+        <div><strong>Verificado</strong><span>Con documentación</span></div>
+      </div>
+      <div class="hv-card hvc-2">
+        <div class="hvc-ico">💬</div>
+        <div><strong>WhatsApp directo</strong><span>Sin intermediarios</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- TRUST -->
+<div class="trust-bar">
+  <div class="trust-inner">
+    <span>✓ Proveedores verificados</span>
+    <span>✓ WhatsApp y email directo</span>
+    <span>✓ Reseñas reales de usuarios</span>
+    <span>✓ Comparás antes de decidir</span>
+    <span>✓ Sin costo para el usuario</span>
+  </div>
+</div>
+
+<!-- FILTROS + CATÁLOGO -->
+<section class="section" id="catalogo">
+  <div class="container">
+    <div class="section-head">
+      <div class="label-tag">Proveedores</div>
+      <h2>Encontrá tu proveedor ideal</h2>
+      <p>Todos verificados con documentación y seguros. Contacto directo sin comisiones.</p>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-row">
+      <div class="filter-chips" id="categoryChips">
+        <button class="chip active" data-cat="">Todos</button>
+        <button class="chip" data-cat="Limpieza hogareña">Hogareña</button>
+        <button class="chip" data-cat="Limpieza de oficinas">Oficinas</button>
+        <button class="chip" data-cat="Limpieza profunda">Profunda</button>
+        <button class="chip" data-cat="Post-obra">Post-obra</button>
+        <button class="chip" data-cat="Mudanza">Mudanza</button>
+        <button class="chip" data-cat="Servicio de mucama">Mucama</button>
+        <button class="chip" data-cat="Limpieza ecológica">Ecológica</button>
+        <button class="chip" data-cat="Industrial">Industrial</button>
+      </div>
+      <div class="filter-right">
+        <input type="text" id="searchInput" placeholder="🔍 Buscar..." class="search-inline">
+        <select id="sortSelect" class="sort-sel">
+          <option value="rating">Mejor calificados</option>
+          <option value="reviews">Más reseñas</option>
+          <option value="price">Menor precio</option>
+          <option value="name">A → Z</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Grid proveedores -->
+    <div class="providers-grid" id="providersGrid">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando proveedores...</p>
+      </div>
+    </div>
+    <div class="no-results hidden" id="noResults">
+      <div class="nr-icon">🔍</div>
+      <h3>No encontramos proveedores</h3>
+      <p>Probá con otro servicio o zona.</p>
+      <button onclick="resetFilters()" class="btn-outline">Ver todos</button>
+    </div>
+  </div>
+</section>
+
+<!-- CÓMO FUNCIONA -->
+<section class="section bg-alt" id="como-funciona">
+  <div class="container">
+    <div class="section-head">
+      <div class="label-tag">Proceso</div>
+      <h2>Así de simple funciona</h2>
+    </div>
+    <div class="steps-row">
+      <div class="step-item"><div class="step-n">01</div><div class="step-ico">🔍</div><h3>Buscás</h3><p>Filtrás por tipo de servicio y zona. Ves perfiles completos con reseñas reales.</p></div>
+      <div class="step-arr">→</div>
+      <div class="step-item"><div class="step-n">02</div><div class="step-ico">👀</div><h3>Comparás</h3><p>Revisás fotos, precios estimados, servicios y lo que dijeron otros usuarios.</p></div>
+      <div class="step-arr">→</div>
+      <div class="step-item"><div class="step-n">03</div><div class="step-ico">💬</div><h3>Contactás</h3><p>Escribís directo al proveedor por WhatsApp o email. Sin intermediarios.</p></div>
+      <div class="step-arr">→</div>
+      <div class="step-item"><div class="step-n">04</div><div class="step-ico">🌟</div><h3>Dejás tu reseña</h3><p>Ayudás a otros usuarios contando tu experiencia.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <a href="index.html" class="logo"><span class="logo-mark">✦</span>limpix</a>
+      <p>El marketplace de limpieza más confiable de Argentina 🇦🇷</p>
+    </div>
+    <div class="footer-links">
+      <a href="#catalogo">Proveedores</a>
+      <a href="#como-funciona">¿Cómo funciona?</a>
+      <a href="admin.html">Admin</a>
+    </div>
+    <div class="footer-copy">© 2025 Limpix · Todos los derechos reservados</div>
+  </div>
+</footer>
+
+<a href="#" class="wa-global" id="waGlobal" title="Contacto general">
+  <svg viewBox="0 0 24 24" fill="white"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+</a>
+
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

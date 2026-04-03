@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Perfil de Proveedor – Limpix</title>
+  <meta name="description" content="Perfil del proveedor de limpieza en Limpix. Contactá directo por WhatsApp o email.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="nav" id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="logo"><span class="logo-mark">✦</span>limpix</a>
+    <div class="nav-links">
+      <a href="index.html#catalogo">← Volver al catálogo</a>
+    </div>
+    <a href="admin.html" class="btn-admin-link">Panel Admin</a>
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html#catalogo">← Volver al catálogo</a>
+    <a href="admin.html">Panel Admin</a>
+  </div>
+</nav>
+
+<!-- LOADING -->
+<div id="profileLoading" class="page-loading">
+  <div class="spinner"></div>
+  <p>Cargando perfil...</p>
+</div>
+
+<!-- ERROR -->
+<div id="profileError" class="page-error hidden">
+  <div class="pe-icon">😕</div>
+  <h2>Proveedor no encontrado</h2>
+  <p>El proveedor que buscás no existe o fue eliminado.</p>
+  <a href="index.html" class="btn-primary">Volver al catálogo</a>
+</div>
+
+<!-- PROFILE CONTENT -->
+<main id="profileContent" class="hidden">
+
+  <!-- HERO PERFIL -->
+  <div class="profile-hero" id="profileHero">
+    <div class="ph-bg" id="phBg"></div>
+    <div class="container ph-wrap">
+      <div class="ph-avatar" id="phAvatar"></div>
+      <div class="ph-info">
+        <div class="ph-badges">
+          <span class="badge-verified">✓ Verificado</span>
+          <span class="badge-cat" id="phCategories"></span>
+        </div>
+        <h1 id="phName"></h1>
+        <div class="ph-meta">
+          <span id="phZone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+          <span id="phRating" class="ph-stars"></span>
+          <span id="phReviewCount" class="ph-rcount"></span>
+        </div>
+        <p class="ph-desc" id="phDesc"></p>
+      </div>
+      <div class="ph-ctas">
+        <a href="#" id="ctaWhatsapp" class="btn-wa-big" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="white" width="22" height="22"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          Consultar por WhatsApp
+        </a>
+        <a href="#" id="ctaEmail" class="btn-email-big">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+          Enviar email
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETALLE -->
+  <div class="container profile-body">
+    <div class="profile-main">
+
+      <!-- Sobre nosotros -->
+      <div class="profile-card" id="aboutCard">
+        <h3>Sobre nosotros</h3>
+        <p id="phAbout"></p>
+      </div>
+
+      <!-- Servicios que ofrece -->
+      <div class="profile-card">
+        <h3>Servicios que ofrecemos</h3>
+        <div class="services-tags" id="phServices"></div>
+      </div>
+
+      <!-- Galería (si tiene fotos) -->
+      <div class="profile-card hidden" id="galleryCard">
+        <h3>Galería de trabajos</h3>
+        <div class="gallery-grid" id="phGallery"></div>
+      </div>
+
+      <!-- RESEÑAS -->
+      <div class="profile-card" id="reviewsCard">
+        <div class="reviews-header">
+          <h3>Reseñas</h3>
+          <div class="reviews-summary">
+            <div class="rs-score" id="rsScore"></div>
+            <div class="rs-bars" id="rsBars"></div>
+          </div>
+        </div>
+
+        <!-- Escribir reseña -->
+        <div class="review-form-wrap">
+          <h4>Dejá tu reseña</h4>
+          <div class="review-form">
+            <div class="rf-row">
+              <div class="form-group">
+                <label>Tu nombre</label>
+                <input type="text" id="reviewName" placeholder="Ej: María G.">
+              </div>
+              <div class="form-group">
+                <label>Calificación</label>
+                <div class="star-picker" id="starPicker">
+                  <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Tu experiencia</label>
+              <textarea id="reviewText" rows="3" placeholder="Contá cómo fue el servicio..."></textarea>
+            </div>
+            <button class="btn-submit-review" onclick="submitReview()">Publicar reseña</button>
+          </div>
+        </div>
+
+        <!-- Lista de reseñas -->
+        <div class="reviews-list" id="reviewsList">
+          <div class="loading-state small"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside class="profile-sidebar">
+      <div class="sidebar-card">
+        <h4>Precio estimado</h4>
+        <div class="sidebar-price" id="sbPrice"></div>
+        <p class="sidebar-note">El precio final depende del tamaño y detalle del servicio. Consultá directamente.</p>
+        <a href="#" id="sbWa" class="btn-wa-big" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="white" width="18" height="18"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          WhatsApp
+        </a>
+        <a href="#" id="sbEmail" class="btn-email-big" style="margin-top:10px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+          Email
+        </a>
+      </div>
+
+      <div class="sidebar-card">
+        <h4>Zona de cobertura</h4>
+        <p id="sbZone" class="sb-zone-text"></p>
+      </div>
+
+      <div class="sidebar-card" id="sbInfoCard">
+        <h4>Información</h4>
+        <ul class="sb-info-list" id="sbInfoList"></ul>
+      </div>
+    </aside>
+  </div>
+
+</main>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <a href="index.html" class="logo"><span class="logo-mark">✦</span>limpix</a>
+      <p>El marketplace de limpieza más confiable de Argentina 🇦🇷</p>
+    </div>
+    <div class="footer-links">
+      <a href="index.html#catalogo">Proveedores</a>
+      <a href="index.html#como-funciona">¿Cómo funciona?</a>
+    </div>
+    <div class="footer-copy">© 2025 Limpix · Todos los derechos reservados</div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<script src="profile.js"></script>
+</body>
+</html>
