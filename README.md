@@ -108,16 +108,3 @@ Sí, creá más usuarios en Supabase Auth → todos pueden usar el panel.
 
 **¿Supabase es gratis?**
 El plan gratuito incluye 500MB de base de datos, 50.000 filas y 2GB de storage. Más que suficiente para empezar.
-
-
-## 🔐 Si el admin no te deja entrar
-
-Revisá esto en Supabase, en este orden:
-
-1. **Authentication → Users**: el usuario tiene que existir.
-2. Si el proyecto exige confirmación de email, el usuario tiene que figurar como **confirmado**.
-3. **Authentication → URL Configuration**: agregá el dominio de GitHub Pages o tu dominio custom en los redirects permitidos.
-4. Verificá que `supabase.js` tenga la **Project URL** y la **publishable/anon key** correctas.
-5. Volvé a correr `supabase_setup.sql` para dejar bien las políticas RLS.
-
-Si omitís el punto 5, el admin puede iniciar sesión pero fallar al leer, crear o editar registros. Clásico tiro en el pie.

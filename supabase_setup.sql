@@ -57,44 +57,31 @@ CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews(status);
 -- 4. ROW LEVEL SECURITY (RLS)
 -- ============================================================
 
+-- Providers: todos pueden leer activos, solo autenticados pueden escribir
 ALTER TABLE providers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 
--- Providers: lectura pública solo de activos
 DROP POLICY IF EXISTS "providers_select_active" ON providers;
 CREATE POLICY "providers_select_active" ON providers
-  FOR SELECT USING (active = true OR auth.role() = 'authenticated');
+  FOR SELECT USING (active = true);
 
-DROP POLICY IF EXISTS "providers_insert_authenticated" ON providers;
-CREATE POLICY "providers_insert_authenticated" ON providers
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "providers_all_authenticated" ON providers;
+CREATE POLICY "providers_all_authenticated" ON providers
+  FOR ALL USING (auth.role() = 'authenticated');
 
-DROP POLICY IF EXISTS "providers_update_authenticated" ON providers;
-CREATE POLICY "providers_update_authenticated" ON providers
-  FOR UPDATE USING (auth.role() = 'authenticated')
-  WITH CHECK (auth.role() = 'authenticated');
+-- Reviews: todos pueden leer aprobadas e insertar; solo autenticados gestionan
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "providers_delete_authenticated" ON providers;
-CREATE POLICY "providers_delete_authenticated" ON providers
-  FOR DELETE USING (auth.role() = 'authenticated');
-
--- Reviews: lectura pública aprobadas, admins ven todo
 DROP POLICY IF EXISTS "reviews_select_approved" ON reviews;
 CREATE POLICY "reviews_select_approved" ON reviews
-  FOR SELECT USING (status = 'approved' OR auth.role() = 'authenticated');
+  FOR SELECT USING (status = 'approved');
 
 DROP POLICY IF EXISTS "reviews_insert_anyone" ON reviews;
 CREATE POLICY "reviews_insert_anyone" ON reviews
   FOR INSERT WITH CHECK (true);
 
-DROP POLICY IF EXISTS "reviews_update_authenticated" ON reviews;
-CREATE POLICY "reviews_update_authenticated" ON reviews
-  FOR UPDATE USING (auth.role() = 'authenticated')
-  WITH CHECK (auth.role() = 'authenticated');
-
-DROP POLICY IF EXISTS "reviews_delete_authenticated" ON reviews;
-CREATE POLICY "reviews_delete_authenticated" ON reviews
-  FOR DELETE USING (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "reviews_manage_authenticated" ON reviews;
+CREATE POLICY "reviews_manage_authenticated" ON reviews
+  FOR ALL USING (auth.role() = 'authenticated');
 
 -- 5. FUNCIÓN: updated_at automático
 -- ============================================================

@@ -24,7 +24,7 @@ async function loadProviders() {
   try {
     const { data, error } = await supabase
       .from('providers')
-      .select('*, reviews(rating,status)')
+      .select('*, reviews(rating)')
       .eq('active', true);
 
     if (error) throw error;
