@@ -1,477 +1,491 @@
-// ============================================================
-//  admin.js  –  Panel de administración
-// ============================================================
-
-let supabase;
-let currentUser = null;
-let allAdminProviders = [];
-let allAdminReviews = [];
-let editingProviderId = null;
-let reviewFilter = 'all';
-
-document.addEventListener('DOMContentLoaded', async () => {
-  supabase = window.supabase.createClient(window.SUPA_URL, window.SUPA_KEY);
-
-  // Check existing session
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    currentUser = session.user;
-    showAdminPanel();
-  }
-
-  // Date
-  document.getElementById('adminDate').textContent = new Date().toLocaleDateString('es-AR', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  });
-});
-
-// ---- AUTH ----
-async function doLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  const errEl = document.getElementById('loginError');
-  errEl.classList.add('hidden');
-
-  if (!email || !password) {
-    errEl.textContent = 'Ingresá email y contraseña.';
-    errEl.classList.remove('hidden');
+(() => {
+  if (window.__LIMPIX_ADMIN_LOADED__) {
+    console.warn('admin.js ya estaba cargado; se evita doble inicialización.');
     return;
   }
+  window.__LIMPIX_ADMIN_LOADED__ = true;
 
-  const btn = document.querySelector('#loginScreen .btn-submit');
-  btn.disabled = true;
-  btn.textContent = 'Ingresando...';
-
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-  btn.disabled = false;
-  btn.textContent = 'Ingresar';
-
-  if (error) {
-    errEl.textContent = 'Email o contraseña incorrectos.';
-    errEl.classList.remove('hidden');
-    return;
-  }
-  currentUser = data.user;
-  showAdminPanel();
-}
-
-// Enter key on login
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.getElementById('loginScreen') &&
-      !document.getElementById('loginScreen').classList.contains('hidden')) {
-    doLogin();
-  }
-});
-
-async function doLogout() {
-  await supabase.auth.signOut();
-  currentUser = null;
-  document.getElementById('adminPanel').classList.add('hidden');
-  document.getElementById('loginScreen').classList.remove('hidden');
-}
-
-function showAdminPanel() {
-  document.getElementById('loginScreen').classList.add('hidden');
-  document.getElementById('adminPanel').classList.remove('hidden');
-  loadDashboard();
-  loadAdminProviders();
-  loadAdminReviews();
-}
-
-// ---- SECTIONS ----
-function showSection(name, btn) {
-  document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
-  document.getElementById(`section-${name}`).classList.remove('hidden');
-  document.querySelectorAll('.as-item').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  else {
-    const target = document.querySelector(`[data-section="${name}"]`);
-    if (target) target.classList.add('active');
-  }
-}
-
-// ---- DASHBOARD ----
-async function loadDashboard() {
-  const { data: providers } = await supabase.from('providers').select('id').eq('active', true);
-  const { data: reviews } = await supabase.from('reviews').select('id, rating, status, author_name, text, created_at, provider_id');
-
-  const totalProviders = providers?.length || 0;
-  const totalReviews = reviews?.length || 0;
-  const pending = reviews?.filter(r => r.status === 'pending').length || 0;
-  const approved = reviews?.filter(r => r.status === 'approved') || [];
-  const avg = approved.length ? (approved.reduce((a, r) => a + r.rating, 0) / approved.length).toFixed(1) : '–';
-
-  document.getElementById('ds-providers').textContent = totalProviders;
-  document.getElementById('ds-reviews').textContent = totalReviews;
-  document.getElementById('ds-pending').textContent = pending;
-  document.getElementById('ds-avg').textContent = avg + (avg !== '–' ? '★' : '');
-
-  // Latest reviews
-  const latest = (reviews || []).slice(0, 5);
-  const providerMap = {};
-  if (allAdminProviders.length) {
-    allAdminProviders.forEach(p => providerMap[p.id] = p.name);
-  } else {
-    const { data: plist } = await supabase.from('providers').select('id, name');
-    (plist || []).forEach(p => providerMap[p.id] = p.name);
-  }
-
-  document.getElementById('latestReviews').innerHTML = latest.length
-    ? latest.map(r => `
-      <div class="lr-item">
-        <div>
-          <div class="lr-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
-          <div class="lr-text">${escHtml(r.text)}</div>
-          <div class="lr-meta">${escHtml(r.author_name)} · <span class="lr-prov">${escHtml(providerMap[r.provider_id] || 'Desconocido')}</span></div>
-        </div>
-        <span class="lr-status ${r.status}">${statusLabel(r.status)}</span>
-      </div>`).join('')
-    : '<p style="color:var(--muted);font-size:.88rem">No hay reseñas aún.</p>';
-}
-
-// ---- PROVIDERS ----
-async function loadAdminProviders() {
-  const { data, error } = await supabase
-    .from('providers')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  allAdminProviders = data || [];
-  renderAdminProviders(allAdminProviders);
-}
-
-function renderAdminProviders(list) {
-  const el = document.getElementById('adminProvidersList');
-  if (!list.length) {
-    el.innerHTML = '<div class="loading-state"><p>No hay proveedores cargados aún.</p></div>';
-    return;
-  }
-  el.innerHTML = list.map(p => {
-    const initials = (p.name || 'XX').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-    const avatarContent = p.avatar_url
-      ? `<img src="${escHtml(p.avatar_url)}" alt="">`
-      : initials;
-    const avatarStyle = p.avatar_url ? '' : `style="background:${escHtml(p.color || '#00897b')}"`;
-    return `<div class="apl-item">
-      <div class="apl-avatar" ${avatarStyle}>${avatarContent}</div>
-      <div class="apl-info">
-        <h4>${escHtml(p.name)}</h4>
-        <p>${escHtml(p.zone || '')} · ${escHtml((Array.isArray(p.categories) ? p.categories : (p.categories||'').split(',')).slice(0,2).join(', '))}</p>
-      </div>
-      <div class="apl-meta">
-        <span class="apl-status ${p.active ? 'active' : 'inactive'}">${p.active ? 'Activo' : 'Inactivo'}</span>
-        <div class="apl-actions">
-          <button class="btn-icon btn-view" title="Ver perfil" onclick="window.open('proveedor.html?id=${p.id}','_blank')">👁</button>
-          <button class="btn-icon btn-edit" title="Editar" onclick="editProvider('${p.id}')">✏️</button>
-          <button class="btn-icon btn-toggle ${p.active ? '' : 'off'}" title="${p.active ? 'Desactivar' : 'Activar'}" onclick="toggleProvider('${p.id}', ${p.active})">
-            ${p.active ? '✓' : '✗'}
-          </button>
-          <button class="btn-icon btn-delete" title="Eliminar" onclick="deleteProvider('${p.id}', '${escHtml(p.name)}')">🗑</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function filterAdminProviders() {
-  const q = document.getElementById('adminSearchProv').value.toLowerCase();
-  const filtered = allAdminProviders.filter(p =>
-    (p.name || '').toLowerCase().includes(q) ||
-    (p.zone || '').toLowerCase().includes(q)
-  );
-  renderAdminProviders(filtered);
-}
-
-// ---- TOGGLE / DELETE ----
-async function toggleProvider(id, currentActive) {
-  const { error } = await supabase.from('providers').update({ active: !currentActive }).eq('id', id);
-  if (!error) {
-    toast(`Proveedor ${!currentActive ? 'activado' : 'desactivado'}.`, 'success');
-    await loadAdminProviders();
-    loadDashboard();
-  }
-}
-
-async function deleteProvider(id, name) {
-  if (!confirm(`¿Eliminar a "${name}"? Esta acción no se puede deshacer.`)) return;
-  const { error } = await supabase.from('providers').delete().eq('id', id);
-  if (!error) {
-    toast('Proveedor eliminado.', 'success');
-    await loadAdminProviders();
-    loadDashboard();
-  } else {
-    toast('Error al eliminar.', 'error');
-  }
-}
-
-// ---- OPEN / CLOSE MODAL ----
-function openNewProvider() {
-  editingProviderId = null;
-  document.getElementById('modalTitle').textContent = 'Nuevo proveedor';
-  resetProviderForm();
-  openModal();
-  showSection('providers', document.querySelector('[data-section=providers]'));
-}
-
-function editProvider(id) {
-  const p = allAdminProviders.find(x => x.id === id);
-  if (!p) return;
-  editingProviderId = id;
-  document.getElementById('modalTitle').textContent = 'Editar proveedor';
-  fillProviderForm(p);
-  openModal();
-}
-
-function openModal() {
-  document.getElementById('providerModal').classList.remove('hidden');
-  document.getElementById('providerModalOverlay').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-  switchTab('basic', document.querySelector('.am-tab'));
-}
-
-function closeProviderModal() {
-  document.getElementById('providerModal').classList.add('hidden');
-  document.getElementById('providerModalOverlay').classList.add('hidden');
-  document.body.style.overflow = '';
-}
-
-// ---- TABS ----
-function switchTab(name, btn) {
-  document.querySelectorAll('.am-tab-content').forEach(t => t.classList.add('hidden'));
-  document.querySelectorAll('.am-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(`tab-${name}`).classList.remove('hidden');
-  if (btn) btn.classList.add('active');
-}
-
-// ---- FORM ----
-function resetProviderForm() {
-  ['pName','pZone','pDesc','pAbout','pWhatsapp','pEmail','pYears','pAvatar','pGallery','pPriceFrom','pPriceTo'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  document.getElementById('pActive').value = 'true';
-  document.querySelectorAll('#serviceChecks input[type=checkbox]').forEach(cb => cb.checked = false);
-  document.getElementById('pColor').value = '#00897b';
-  document.querySelectorAll('#colorPalette .cp-item').forEach(c => c.classList.toggle('selected', c.dataset.color === '#00897b'));
-  document.getElementById('extraInfoList').innerHTML = '';
-  // Color palette click
-  initColorPalette();
-}
-
-function fillProviderForm(p) {
-  resetProviderForm();
-  document.getElementById('pName').value = p.name || '';
-  document.getElementById('pZone').value = p.zone || '';
-  document.getElementById('pDesc').value = p.description || '';
-  document.getElementById('pAbout').value = p.about || '';
-  document.getElementById('pWhatsapp').value = p.whatsapp || '';
-  document.getElementById('pEmail').value = p.email || '';
-  document.getElementById('pYears').value = p.years_experience || '';
-  document.getElementById('pAvatar').value = p.avatar_url || '';
-  document.getElementById('pActive').value = p.active ? 'true' : 'false';
-  document.getElementById('pPriceFrom').value = p.price_from || '';
-  document.getElementById('pPriceTo').value = p.price_to || '';
-
-  // Categories
-  const cats = Array.isArray(p.categories) ? p.categories : (p.categories || '').split(',').map(c => c.trim()).filter(Boolean);
-  document.querySelectorAll('#serviceChecks input[type=checkbox]').forEach(cb => {
-    cb.checked = cats.includes(cb.value);
-  });
-
-  // Gallery
-  const gallery = Array.isArray(p.gallery) ? p.gallery : [];
-  document.getElementById('pGallery').value = gallery.join('\n');
-
-  // Color
-  const color = p.color || '#00897b';
-  document.getElementById('pColor').value = color;
-  document.querySelectorAll('#colorPalette .cp-item').forEach(c => c.classList.toggle('selected', c.dataset.color === color));
-
-  // Extra info
-  const extra = Array.isArray(p.extra_info) ? p.extra_info : [];
-  extra.forEach(e => addExtraInfo(e.key, e.value));
-}
-
-function initColorPalette() {
-  document.querySelectorAll('#colorPalette .cp-item').forEach(item => {
-    item.onclick = () => {
-      document.querySelectorAll('#colorPalette .cp-item').forEach(c => c.classList.remove('selected'));
-      item.classList.add('selected');
-      document.getElementById('pColor').value = item.dataset.color;
-    };
-  });
-}
-
-// Extra info rows
-function addExtraInfo(key = '', value = '') {
-  const list = document.getElementById('extraInfoList');
-  const div = document.createElement('div');
-  div.className = 'ei-item';
-  div.innerHTML = `
-    <input type="text" placeholder="Etiqueta (ej: Días)" value="${escHtml(key)}" class="ei-key">
-    <input type="text" placeholder="Valor (ej: Lun a Sáb)" value="${escHtml(value)}" class="ei-val">
-    <button class="ei-remove" onclick="this.parentElement.remove()" title="Eliminar">✕</button>`;
-  list.appendChild(div);
-}
-
-// ---- SAVE PROVIDER ----
-async function saveProvider() {
-  const name = document.getElementById('pName').value.trim();
-  const zone = document.getElementById('pZone').value.trim();
-  const desc = document.getElementById('pDesc').value.trim();
-  const whatsapp = document.getElementById('pWhatsapp').value.trim().replace(/\D/g, '');
-
-  if (!name || !zone || !desc) {
-    toast('Completá los campos obligatorios (nombre, zona, descripción).', 'error');
-    switchTab('basic', document.querySelector('.am-tab'));
-    return;
-  }
-  if (!whatsapp) {
-    toast('El WhatsApp es obligatorio.', 'error');
-    switchTab('basic', document.querySelector('.am-tab'));
-    return;
-  }
-
-  const cats = Array.from(document.querySelectorAll('#serviceChecks input[type=checkbox]:checked')).map(cb => cb.value);
-  const galleryRaw = document.getElementById('pGallery').value.trim();
-  const gallery = galleryRaw ? galleryRaw.split('\n').map(u => u.trim()).filter(Boolean) : [];
-  const extraItems = Array.from(document.querySelectorAll('#extraInfoList .ei-item')).map(row => ({
-    key: row.querySelector('.ei-key').value.trim(),
-    value: row.querySelector('.ei-val').value.trim()
-  })).filter(e => e.key && e.value);
-
-  const payload = {
-    name,
-    zone,
-    description: desc,
-    about: document.getElementById('pAbout').value.trim() || null,
-    whatsapp,
-    email: document.getElementById('pEmail').value.trim() || null,
-    years_experience: parseInt(document.getElementById('pYears').value) || null,
-    avatar_url: document.getElementById('pAvatar').value.trim() || null,
-    color: document.getElementById('pColor').value,
-    active: document.getElementById('pActive').value === 'true',
-    categories: cats,
-    gallery,
-    price_from: parseInt(document.getElementById('pPriceFrom').value) || null,
-    price_to: parseInt(document.getElementById('pPriceTo').value) || null,
-    extra_info: extraItems,
+  const state = {
+    client: null,
+    currentUser: null,
+    providers: [],
+    reviews: [],
+    editingProviderId: null,
+    reviewFilter: 'all'
   };
 
-  const btn = document.querySelector('.am-footer .btn-primary');
-  btn.disabled = true;
-  btn.textContent = 'Guardando...';
+  const $ = (id) => document.getElementById(id);
 
-  let error;
-  if (editingProviderId) {
-    ({ error } = await supabase.from('providers').update(payload).eq('id', editingProviderId));
-  } else {
-    ({ error } = await supabase.from('providers').insert(payload));
+  function escHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
-  btn.disabled = false;
-  btn.textContent = 'Guardar proveedor';
-
-  if (error) {
-    console.error(error);
-    toast('Error al guardar: ' + error.message, 'error');
-    return;
+  function toast(msg, type = '') {
+    const t = $('adminToast');
+    if (!t) return;
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3500);
   }
 
-  closeProviderModal();
-  toast(editingProviderId ? 'Proveedor actualizado.' : 'Proveedor creado.', 'success');
-  await loadAdminProviders();
-  loadDashboard();
-}
-
-// ---- REVIEWS ----
-async function loadAdminReviews() {
-  const { data, error } = await supabase
-    .from('reviews')
-    .select('*, providers(name)')
-    .order('created_at', { ascending: false });
-
-  allAdminReviews = data || [];
-  renderAdminReviews();
-}
-
-function filterReviews(filter, btn) {
-  reviewFilter = filter;
-  document.querySelectorAll('.reviews-filter-row .chip').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  renderAdminReviews();
-}
-
-function renderAdminReviews() {
-  const list = document.getElementById('adminReviewsList');
-  let filtered = [...allAdminReviews];
-  if (reviewFilter !== 'all') filtered = filtered.filter(r => r.status === reviewFilter);
-
-  if (!filtered.length) {
-    list.innerHTML = '<div class="loading-state"><p>No hay reseñas en esta categoría.</p></div>';
-    return;
+  function setLoginError(message = '') {
+    const el = $('loginError');
+    if (!el) return;
+    if (!message) {
+      el.classList.add('hidden');
+      return;
+    }
+    el.textContent = message;
+    el.classList.remove('hidden');
   }
 
-  list.innerHTML = filtered.map(r => {
-    const provName = r.providers?.name || 'Proveedor desconocido';
-    const date = r.created_at ? new Date(r.created_at).toLocaleDateString('es-AR') : '';
-    return `<div class="ar-item" id="ar-${r.id}">
-      <div class="ar-header">
-        <span class="ar-name">${escHtml(r.author_name)}</span>
-        <span class="ar-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>
-        <span class="ar-prov">${escHtml(provName)}</span>
-        <span class="ar-date">${date}</span>
-      </div>
-      <div class="ar-text">${escHtml(r.text)}</div>
-      <div class="ar-actions">
-        <span class="ar-status ${r.status}">${statusLabel(r.status)}</span>
-        ${r.status !== 'approved' ? `<button class="btn-approve" onclick="updateReview('${r.id}','approved')">✓ Aprobar</button>` : ''}
-        ${r.status !== 'rejected' ? `<button class="btn-reject" onclick="updateReview('${r.id}','rejected')">✗ Rechazar</button>` : ''}
-        <button class="btn-delete-review" onclick="deleteReview('${r.id}')" title="Eliminar">🗑 Eliminar</button>
-      </div>
-    </div>`;
-  }).join('');
-}
+  function setLoginLoading(loading) {
+    const btn = $('loginBtn');
+    if (!btn) return;
+    btn.disabled = !!loading;
+    btn.textContent = loading ? 'Ingresando...' : 'Ingresar';
+  }
 
-async function updateReview(id, status) {
-  const { error } = await supabase.from('reviews').update({ status }).eq('id', id);
-  if (!error) {
-    toast(`Reseña ${status === 'approved' ? 'aprobada' : 'rechazada'}.`, 'success');
-    allAdminReviews = allAdminReviews.map(r => r.id === id ? { ...r, status } : r);
+  function getClient() {
+    if (state.client) return state.client;
+    if (!window.supabase || !window.SUPA_URL || !window.SUPA_KEY) {
+      throw new Error('Supabase no está inicializado. Revisá supabase.js.');
+    }
+    state.client = window.supabase.createClient(window.SUPA_URL, window.SUPA_KEY);
+    return state.client;
+  }
+
+  async function init() {
+    try {
+      bindUI();
+      getClient();
+      const adminDate = $('adminDate');
+      if (adminDate) {
+        adminDate.textContent = new Date().toLocaleDateString('es-AR', {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+      }
+
+      const { data: { session }, error } = await state.client.auth.getSession();
+      if (error) throw error;
+      if (session?.user) {
+        state.currentUser = session.user;
+        showAdminPanel();
+      }
+    } catch (err) {
+      console.error(err);
+      setLoginError(err.message || 'Error al inicializar el panel.');
+    }
+  }
+
+  function bindUI() {
+    const loginForm = $('loginForm');
+    if (loginForm) {
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await doLogin();
+      });
+    }
+
+    const provSearch = $('adminSearchProv');
+    if (provSearch) provSearch.addEventListener('input', filterAdminProviders);
+
+    document.querySelectorAll('#colorPalette .cp-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('#colorPalette .cp-item').forEach(c => c.classList.remove('selected'));
+        item.classList.add('selected');
+        $('pColor').value = item.dataset.color;
+      });
+    });
+  }
+
+  async function doLogin() {
+    setLoginError('');
+    const email = $('loginEmail')?.value.trim() || '';
+    const password = $('loginPassword')?.value || '';
+
+    if (!email || !password) {
+      setLoginError('Ingresá email y contraseña.');
+      return false;
+    }
+
+    try {
+      setLoginLoading(true);
+      const { data, error } = await state.client.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      state.currentUser = data.user;
+      showAdminPanel();
+      return true;
+    } catch (err) {
+      console.error(err);
+      setLoginError(err.message || 'No se pudo iniciar sesión.');
+      return false;
+    } finally {
+      setLoginLoading(false);
+    }
+  }
+
+  async function doLogout() {
+    try {
+      await state.client.auth.signOut();
+    } catch (err) {
+      console.error(err);
+    }
+    state.currentUser = null;
+    $('adminPanel')?.classList.add('hidden');
+    $('loginScreen')?.classList.remove('hidden');
+    showSection('dashboard', document.querySelector('[data-section="dashboard"]'));
+  }
+
+  async function showAdminPanel() {
+    $('loginScreen')?.classList.add('hidden');
+    $('adminPanel')?.classList.remove('hidden');
+    await Promise.all([loadDashboard(), loadAdminProviders(), loadAdminReviews()]);
+  }
+
+  function showSection(name, btn) {
+    document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
+    $(`section-${name}`)?.classList.remove('hidden');
+    document.querySelectorAll('.as-item').forEach(b => b.classList.remove('active'));
+    (btn || document.querySelector(`[data-section="${name}"]`))?.classList.add('active');
+  }
+
+  async function loadDashboard() {
+    try {
+      const { data: providers, error: pErr } = await state.client.from('providers').select('id,active');
+      if (pErr) throw pErr;
+      const { data: reviews, error: rErr } = await state.client.from('reviews').select('id,rating,status,author_name,text,created_at,provider_id');
+      if (rErr) throw rErr;
+
+      const activeProviders = (providers || []).filter(p => p.active).length;
+      const approved = (reviews || []).filter(r => r.status === 'approved');
+      const pending = (reviews || []).filter(r => r.status === 'pending').length;
+      const avg = approved.length ? (approved.reduce((acc, r) => acc + r.rating, 0) / approved.length).toFixed(1) : '–';
+
+      $('ds-providers').textContent = activeProviders;
+      $('ds-reviews').textContent = (reviews || []).length;
+      $('ds-pending').textContent = pending;
+      $('ds-avg').textContent = avg === '–' ? avg : `${avg}★`;
+
+      const providerMap = {};
+      state.providers.forEach(p => providerMap[p.id] = p.name);
+      const latest = [...(reviews || [])].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0,5);
+      $('latestReviews').innerHTML = latest.length ? latest.map(r => `
+        <div class="lr-item">
+          <div>
+            <div class="lr-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+            <div class="lr-text">${escHtml(r.text)}</div>
+            <div class="lr-meta">${escHtml(r.author_name)} · <span class="lr-prov">${escHtml(providerMap[r.provider_id] || 'Proveedor')}</span></div>
+          </div>
+          <span class="lr-status ${r.status}">${statusLabel(r.status)}</span>
+        </div>
+      `).join('') : '<p style="color:var(--muted);font-size:.88rem">No hay reseñas aún.</p>';
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function loadAdminProviders() {
+    try {
+      const { data, error } = await state.client.from('providers').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      state.providers = data || [];
+      renderAdminProviders(state.providers);
+    } catch (err) {
+      console.error(err);
+      $('adminProvidersList').innerHTML = `<div class="loading-state"><p style="color:#ef4444">${escHtml(err.message || 'Error cargando proveedores.')}</p></div>`;
+    }
+  }
+
+  function renderAdminProviders(list) {
+    const el = $('adminProvidersList');
+    if (!el) return;
+    if (!list.length) {
+      el.innerHTML = '<div class="loading-state"><p>No hay proveedores cargados aún.</p></div>';
+      return;
+    }
+    el.innerHTML = list.map(p => {
+      const initials = (p.name || 'XX').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+      const avatar = p.avatar_url ? `<img src="${escHtml(p.avatar_url)}" alt="">` : initials;
+      const avatarStyle = p.avatar_url ? '' : `style="background:${escHtml(p.color || '#00897b')}"`;
+      const cats = Array.isArray(p.categories) ? p.categories : [];
+      return `
+        <div class="apl-item">
+          <div class="apl-avatar" ${avatarStyle}>${avatar}</div>
+          <div class="apl-info">
+            <h4>${escHtml(p.name)}</h4>
+            <p>${escHtml(p.zone || '')} · ${escHtml(cats.slice(0,3).join(', '))}</p>
+          </div>
+          <div class="apl-meta">
+            <span class="apl-status ${p.active ? 'active' : 'inactive'}">${p.active ? 'Activo' : 'Inactivo'}</span>
+            <div class="apl-actions">
+              <button class="btn-icon btn-view" title="Ver perfil" onclick="window.open('proveedor.html?id=${p.id}','_blank')">👁</button>
+              <button class="btn-icon btn-edit" title="Editar" onclick="editProvider('${p.id}')">✏️</button>
+              <button class="btn-icon btn-toggle ${p.active ? '' : 'off'}" title="${p.active ? 'Desactivar' : 'Activar'}" onclick="toggleProvider('${p.id}', ${p.active})">${p.active ? '✓' : '✗'}</button>
+              <button class="btn-icon btn-delete" title="Eliminar" onclick="deleteProvider('${p.id}', ${JSON.stringify(p.name)})">🗑</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function filterAdminProviders() {
+    const q = ($('adminSearchProv')?.value || '').trim().toLowerCase();
+    if (!q) return renderAdminProviders(state.providers);
+    const filtered = state.providers.filter(p =>
+      (p.name || '').toLowerCase().includes(q) ||
+      (p.zone || '').toLowerCase().includes(q) ||
+      (Array.isArray(p.categories) ? p.categories.join(' ') : '').toLowerCase().includes(q)
+    );
+    renderAdminProviders(filtered);
+  }
+
+  async function toggleProvider(id, currentActive) {
+    try {
+      const { error } = await state.client.from('providers').update({ active: !currentActive }).eq('id', id);
+      if (error) throw error;
+      toast(`Proveedor ${!currentActive ? 'activado' : 'desactivado'}.`, 'success');
+      await Promise.all([loadAdminProviders(), loadDashboard()]);
+    } catch (err) {
+      console.error(err);
+      toast(err.message || 'No se pudo actualizar el proveedor.', 'error');
+    }
+  }
+
+  async function deleteProvider(id, name) {
+    if (!confirm(`¿Eliminar a ${name}? Esta acción no se puede deshacer.`)) return;
+    try {
+      const { error } = await state.client.from('providers').delete().eq('id', id);
+      if (error) throw error;
+      toast('Proveedor eliminado.', 'success');
+      await Promise.all([loadAdminProviders(), loadDashboard()]);
+    } catch (err) {
+      console.error(err);
+      toast(err.message || 'No se pudo eliminar el proveedor.', 'error');
+    }
+  }
+
+  function openNewProvider() {
+    state.editingProviderId = null;
+    $('modalTitle').textContent = 'Nuevo proveedor';
+    resetProviderForm();
+    openModal();
+    showSection('providers', document.querySelector('[data-section="providers"]'));
+  }
+
+  function editProvider(id) {
+    const p = state.providers.find(x => x.id === id);
+    if (!p) return;
+    state.editingProviderId = id;
+    $('modalTitle').textContent = 'Editar proveedor';
+    resetProviderForm();
+    $('pName').value = p.name || '';
+    $('pZone').value = p.zone || '';
+    $('pDesc').value = p.description || '';
+    $('pAbout').value = p.about || '';
+    $('pWhatsapp').value = p.whatsapp || '';
+    $('pEmail').value = p.email || '';
+    $('pYears').value = p.years_experience || '';
+    $('pActive').value = String(!!p.active);
+    $('pPriceFrom').value = p.price_from || '';
+    $('pPriceTo').value = p.price_to || '';
+    $('pAvatar').value = p.avatar_url || '';
+    $('pGallery').value = Array.isArray(p.gallery) ? p.gallery.join('\n') : '';
+    $('pColor').value = p.color || '#00897b';
+    document.querySelectorAll('#colorPalette .cp-item').forEach(c => c.classList.toggle('selected', c.dataset.color === (p.color || '#00897b')));
+    document.querySelectorAll('#serviceChecks input[type="checkbox"]').forEach(cb => cb.checked = Array.isArray(p.categories) && p.categories.includes(cb.value));
+    $('extraInfoList').innerHTML = '';
+    (Array.isArray(p.extra_info) ? p.extra_info : []).forEach(e => addExtraInfo(e.key, e.value));
+    openModal();
+  }
+
+  function openModal() {
+    $('providerModal')?.classList.remove('hidden');
+    $('providerModalOverlay')?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    switchTab('basic', document.querySelector('.am-tab'));
+  }
+
+  function closeProviderModal() {
+    $('providerModal')?.classList.add('hidden');
+    $('providerModalOverlay')?.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  function switchTab(name, btn) {
+    document.querySelectorAll('.am-tab-content').forEach(t => t.classList.add('hidden'));
+    document.querySelectorAll('.am-tab').forEach(t => t.classList.remove('active'));
+    $(`tab-${name}`)?.classList.remove('hidden');
+    btn?.classList.add('active');
+  }
+
+  function resetProviderForm() {
+    ['pName','pZone','pDesc','pAbout','pWhatsapp','pEmail','pYears','pAvatar','pGallery','pPriceFrom','pPriceTo'].forEach(id => { if ($(id)) $(id).value = ''; });
+    $('pActive').value = 'true';
+    $('pColor').value = '#00897b';
+    document.querySelectorAll('#serviceChecks input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.querySelectorAll('#colorPalette .cp-item').forEach(c => c.classList.toggle('selected', c.dataset.color === '#00897b'));
+    $('extraInfoList').innerHTML = '';
+  }
+
+  function addExtraInfo(key = '', value = '') {
+    const row = document.createElement('div');
+    row.className = 'ei-item';
+    row.innerHTML = `
+      <input type="text" placeholder="Etiqueta" value="${escHtml(key)}" class="ei-key">
+      <input type="text" placeholder="Valor" value="${escHtml(value)}" class="ei-val">
+      <button type="button" class="ei-remove" title="Eliminar">✕</button>`;
+    row.querySelector('.ei-remove').addEventListener('click', () => row.remove());
+    $('extraInfoList').appendChild(row);
+  }
+
+  async function saveProvider() {
+    const name = $('pName').value.trim();
+    const zone = $('pZone').value.trim();
+    const description = $('pDesc').value.trim();
+    const whatsapp = $('pWhatsapp').value.trim().replace(/\D/g, '');
+
+    if (!name || !zone || !description || !whatsapp) {
+      toast('Completá nombre, zona, descripción y WhatsApp.', 'error');
+      return;
+    }
+
+    const payload = {
+      name,
+      zone,
+      description,
+      about: $('pAbout').value.trim() || null,
+      whatsapp,
+      email: $('pEmail').value.trim() || null,
+      years_experience: parseInt($('pYears').value, 10) || null,
+      active: $('pActive').value === 'true',
+      categories: Array.from(document.querySelectorAll('#serviceChecks input[type="checkbox"]:checked')).map(cb => cb.value),
+      price_from: parseInt($('pPriceFrom').value, 10) || null,
+      price_to: parseInt($('pPriceTo').value, 10) || null,
+      avatar_url: $('pAvatar').value.trim() || null,
+      color: $('pColor').value || '#00897b',
+      gallery: ($('pGallery').value || '').split('\n').map(x => x.trim()).filter(Boolean),
+      extra_info: Array.from(document.querySelectorAll('#extraInfoList .ei-item')).map(item => ({
+        key: item.querySelector('.ei-key').value.trim(),
+        value: item.querySelector('.ei-val').value.trim()
+      })).filter(x => x.key && x.value)
+    };
+
+    const btn = document.querySelector('.am-footer .btn-primary');
+    if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+    try {
+      let result;
+      if (state.editingProviderId) {
+        result = await state.client.from('providers').update(payload).eq('id', state.editingProviderId);
+      } else {
+        result = await state.client.from('providers').insert(payload);
+      }
+      if (result.error) throw result.error;
+      closeProviderModal();
+      toast(state.editingProviderId ? 'Proveedor actualizado.' : 'Proveedor creado.', 'success');
+      await Promise.all([loadAdminProviders(), loadDashboard()]);
+    } catch (err) {
+      console.error(err);
+      toast(err.message || 'No se pudo guardar el proveedor.', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Guardar proveedor'; }
+    }
+  }
+
+  async function loadAdminReviews() {
+    try {
+      const { data, error } = await state.client.from('reviews').select('*, providers(name)').order('created_at', { ascending: false });
+      if (error) throw error;
+      state.reviews = data || [];
+      renderAdminReviews();
+    } catch (err) {
+      console.error(err);
+      $('adminReviewsList').innerHTML = `<div class="loading-state"><p style="color:#ef4444">${escHtml(err.message || 'Error cargando reseñas.')}</p></div>`;
+    }
+  }
+
+  function filterReviews(filter, btn) {
+    state.reviewFilter = filter;
+    document.querySelectorAll('.reviews-filter-row .chip').forEach(b => b.classList.remove('active'));
+    btn?.classList.add('active');
     renderAdminReviews();
-    loadDashboard();
   }
-}
 
-async function deleteReview(id) {
-  if (!confirm('¿Eliminar esta reseña?')) return;
-  const { error } = await supabase.from('reviews').delete().eq('id', id);
-  if (!error) {
-    toast('Reseña eliminada.', 'success');
-    allAdminReviews = allAdminReviews.filter(r => r.id !== id);
-    renderAdminReviews();
-    loadDashboard();
+  function renderAdminReviews() {
+    const list = $('adminReviewsList');
+    if (!list) return;
+    let filtered = [...state.reviews];
+    if (state.reviewFilter !== 'all') filtered = filtered.filter(r => r.status === state.reviewFilter);
+    if (!filtered.length) {
+      list.innerHTML = '<div class="loading-state"><p>No hay reseñas en esta categoría.</p></div>';
+      return;
+    }
+    list.innerHTML = filtered.map(r => `
+      <div class="ar-item">
+        <div class="ar-header">
+          <span class="ar-name">${escHtml(r.author_name)}</span>
+          <span class="ar-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>
+          <span class="ar-prov">${escHtml(r.providers?.name || 'Proveedor')}</span>
+          <span class="ar-date">${r.created_at ? new Date(r.created_at).toLocaleDateString('es-AR') : ''}</span>
+        </div>
+        <div class="ar-text">${escHtml(r.text)}</div>
+        <div class="ar-actions">
+          <span class="ar-status ${r.status}">${statusLabel(r.status)}</span>
+          ${r.status !== 'approved' ? `<button class="btn-approve" onclick="updateReview('${r.id}','approved')">✓ Aprobar</button>` : ''}
+          ${r.status !== 'rejected' ? `<button class="btn-reject" onclick="updateReview('${r.id}','rejected')">✗ Rechazar</button>` : ''}
+          <button class="btn-delete-review" onclick="deleteReview('${r.id}')">🗑 Eliminar</button>
+        </div>
+      </div>`).join('');
   }
-}
 
-// ---- HELPERS ----
-function statusLabel(s) {
-  return { pending: 'Pendiente', approved: 'Aprobada', rejected: 'Rechazada' }[s] || s;
-}
+  async function updateReview(id, status) {
+    try {
+      const { error } = await state.client.from('reviews').update({ status }).eq('id', id);
+      if (error) throw error;
+      toast(`Reseña ${status === 'approved' ? 'aprobada' : 'rechazada'}.`, 'success');
+      await Promise.all([loadAdminReviews(), loadDashboard()]);
+    } catch (err) {
+      console.error(err);
+      toast(err.message || 'No se pudo actualizar la reseña.', 'error');
+    }
+  }
 
-function toast(msg, type = '') {
-  const t = document.getElementById('adminToast');
-  t.textContent = msg;
-  t.className = `toast ${type} show`;
-  setTimeout(() => t.classList.remove('show'), 4000);
-}
+  async function deleteReview(id) {
+    if (!confirm('¿Eliminar esta reseña?')) return;
+    try {
+      const { error } = await state.client.from('reviews').delete().eq('id', id);
+      if (error) throw error;
+      toast('Reseña eliminada.', 'success');
+      await Promise.all([loadAdminReviews(), loadDashboard()]);
+    } catch (err) {
+      console.error(err);
+      toast(err.message || 'No se pudo eliminar la reseña.', 'error');
+    }
+  }
 
-function escHtml(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+  function statusLabel(s) {
+    return ({ pending: 'Pendiente', approved: 'Aprobada', rejected: 'Rechazada' })[s] || s;
+  }
 
-// Init color palette on first load
-document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(initColorPalette, 100);
-});
+  window.doLogin = doLogin;
+  window.doLogout = doLogout;
+  window.showSection = showSection;
+  window.openNewProvider = openNewProvider;
+  window.editProvider = editProvider;
+  window.toggleProvider = toggleProvider;
+  window.deleteProvider = deleteProvider;
+  window.closeProviderModal = closeProviderModal;
+  window.switchTab = switchTab;
+  window.addExtraInfo = addExtraInfo;
+  window.saveProvider = saveProvider;
+  window.filterAdminProviders = filterAdminProviders;
+  window.filterReviews = filterReviews;
+  window.updateReview = updateReview;
+  window.deleteReview = deleteReview;
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
