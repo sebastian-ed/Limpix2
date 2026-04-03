@@ -18,18 +18,17 @@
   <div class="login-card">
     <div class="login-logo"><span class="logo-mark">✦</span>limpix</div>
     <h2>Panel de administración</h2>
-    <p>Ingresá con el usuario de Supabase que tenga acceso al panel.</p>
+    <p>Ingresá con tu contraseña de admin</p>
     <div class="form-group">
       <label>Email</label>
       <input type="email" id="loginEmail" placeholder="admin@limpix.com" autocomplete="email">
     </div>
     <div class="form-group">
       <label>Contraseña</label>
-      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"><small class="hint">Si al tocar ingresar no responde, ahora va a mostrar el error real en pantalla.</small>
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
     </div>
     <div class="login-error hidden" id="loginError">Email o contraseña incorrectos.</div>
-    <div class="login-help">Si el login falla en GitHub Pages, el problema casi siempre está en Auth o en la config del proyecto, no en el navegador.</div>
-    <button class="btn-submit" id="loginBtn" type="button">Ingresar</button>
+    <button class="btn-submit" onclick="doLogin()">Ingresar</button>
     <a href="index.html" class="login-back">← Volver al sitio</a>
   </div>
 </div>
