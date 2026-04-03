@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="es-AR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Panel Admin – Limpix</title>
-  <meta name="robots" content="noindex, nofollow">
+  <meta name="robots" content="noindex, nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
@@ -13,56 +13,42 @@
 </head>
 <body class="admin-body">
 
-<!-- LOGIN SCREEN -->
 <div id="loginScreen" class="login-screen">
   <div class="login-card">
     <div class="login-logo"><span class="logo-mark">✦</span>limpix</div>
     <h2>Panel de administración</h2>
-    <p>Ingresá con tu contraseña de admin</p>
-    <div class="form-group">
-      <label>Email</label>
-      <input type="email" id="loginEmail" placeholder="admin@limpix.com" autocomplete="email">
-    </div>
-    <div class="form-group">
-      <label>Contraseña</label>
-      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <div class="login-error hidden" id="loginError">Email o contraseña incorrectos.</div>
-    <button class="btn-submit" onclick="doLogin()">Ingresar</button>
+    <p>Ingresá con tu usuario de Supabase.</p>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="admin@limpix.com" autocomplete="email" required>
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Contraseña</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+      <div class="login-error hidden" id="loginError">Email o contraseña incorrectos.</div>
+      <button class="btn-submit" id="loginBtn" type="submit">Ingresar</button>
+    </form>
+
     <a href="index.html" class="login-back">← Volver al sitio</a>
   </div>
 </div>
 
-<!-- ADMIN PANEL -->
 <div id="adminPanel" class="hidden">
-
-  <!-- Sidebar -->
   <aside class="admin-sidebar">
     <div class="as-logo"><span class="logo-mark">✦</span>limpix <span class="as-badge">Admin</span></div>
     <nav class="as-nav">
-      <button class="as-item active" data-section="dashboard" onclick="showSection('dashboard', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Dashboard
-      </button>
-      <button class="as-item" data-section="providers" onclick="showSection('providers', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Proveedores
-      </button>
-      <button class="as-item" data-section="reviews" onclick="showSection('reviews', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Reseñas
-      </button>
+      <button class="as-item active" data-section="dashboard" onclick="showSection('dashboard', this)">Dashboard</button>
+      <button class="as-item" data-section="providers" onclick="showSection('providers', this)">Proveedores</button>
+      <button class="as-item" data-section="reviews" onclick="showSection('reviews', this)">Reseñas</button>
+      <a href="index.html" class="as-item" style="text-decoration:none;">← Volver al sitio</a>
     </nav>
-    <button class="as-logout" onclick="doLogout()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      Cerrar sesión
-    </button>
+    <button class="as-logout" onclick="doLogout()">Cerrar sesión</button>
   </aside>
 
-  <!-- Main content -->
   <main class="admin-main">
-
-    <!-- DASHBOARD -->
     <section id="section-dashboard" class="admin-section">
       <div class="admin-header"><h1>Dashboard</h1><span id="adminDate"></span></div>
       <div class="dashboard-stats">
@@ -74,8 +60,8 @@
       <div class="dashboard-actions">
         <div class="da-card">
           <h3>Acciones rápidas</h3>
-          <button class="btn-primary" onclick="showSection('providers'); openNewProvider()">+ Agregar proveedor</button>
-          <button class="btn-outline" onclick="showSection('reviews', document.querySelector('[data-section=reviews]'))">Ver reseñas pendientes</button>
+          <button class="btn-primary" type="button" onclick="showSection('providers'); openNewProvider()">+ Agregar proveedor</button>
+          <button class="btn-outline" type="button" onclick="showSection('reviews', document.querySelector('[data-section=reviews]'))">Ver reseñas pendientes</button>
         </div>
         <div class="da-card">
           <h3>Últimas reseñas</h3>
@@ -84,52 +70,47 @@
       </div>
     </section>
 
-    <!-- PROVIDERS -->
     <section id="section-providers" class="admin-section hidden">
       <div class="admin-header">
         <h1>Proveedores</h1>
-        <button class="btn-primary" onclick="openNewProvider()">+ Agregar proveedor</button>
+        <button class="btn-primary" type="button" onclick="openNewProvider()">+ Agregar proveedor</button>
       </div>
       <div class="admin-search-row">
-        <input type="text" id="adminSearchProv" placeholder="🔍 Buscar proveedor..." class="search-inline" oninput="filterAdminProviders()">
+        <input type="text" id="adminSearchProv" placeholder="🔍 Buscar proveedor..." class="search-inline">
       </div>
       <div id="adminProvidersList" class="admin-providers-list">
         <div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>
       </div>
     </section>
 
-    <!-- REVIEWS -->
     <section id="section-reviews" class="admin-section hidden">
       <div class="admin-header"><h1>Reseñas</h1></div>
       <div class="reviews-filter-row">
-        <button class="chip active" data-filter="all" onclick="filterReviews('all', this)">Todas</button>
-        <button class="chip" data-filter="pending" onclick="filterReviews('pending', this)">Pendientes</button>
-        <button class="chip" data-filter="approved" onclick="filterReviews('approved', this)">Aprobadas</button>
-        <button class="chip" data-filter="rejected" onclick="filterReviews('rejected', this)">Rechazadas</button>
+        <button class="chip active" type="button" data-filter="all" onclick="filterReviews('all', this)">Todas</button>
+        <button class="chip" type="button" data-filter="pending" onclick="filterReviews('pending', this)">Pendientes</button>
+        <button class="chip" type="button" data-filter="approved" onclick="filterReviews('approved', this)">Aprobadas</button>
+        <button class="chip" type="button" data-filter="rejected" onclick="filterReviews('rejected', this)">Rechazadas</button>
       </div>
       <div id="adminReviewsList" class="admin-reviews-list">
         <div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>
       </div>
     </section>
-
   </main>
 </div>
 
-<!-- MODAL PROVEEDOR -->
 <div class="modal-overlay hidden" id="providerModalOverlay" onclick="closeProviderModal()"></div>
 <div class="admin-modal hidden" id="providerModal">
   <div class="am-header">
     <h2 id="modalTitle">Nuevo proveedor</h2>
-    <button class="am-close" onclick="closeProviderModal()">✕</button>
+    <button class="am-close" type="button" onclick="closeProviderModal()">✕</button>
   </div>
   <div class="am-body">
     <div class="am-tabs">
-      <button class="am-tab active" onclick="switchTab('basic', this)">Información básica</button>
-      <button class="am-tab" onclick="switchTab('services', this)">Servicios y precios</button>
-      <button class="am-tab" onclick="switchTab('media', this)">Fotos y galería</button>
+      <button class="am-tab active" type="button" onclick="switchTab('basic', this)">Información básica</button>
+      <button class="am-tab" type="button" onclick="switchTab('services', this)">Servicios y precios</button>
+      <button class="am-tab" type="button" onclick="switchTab('media', this)">Fotos y galería</button>
     </div>
 
-    <!-- TAB: básico -->
     <div id="tab-basic" class="am-tab-content">
       <div class="form-row">
         <div class="form-group">
@@ -142,18 +123,18 @@
         </div>
       </div>
       <div class="form-group">
-        <label>Descripción corta * <small>(aparece en la card del catálogo)</small></label>
+        <label>Descripción corta *</label>
         <textarea id="pDesc" rows="2" placeholder="Breve descripción para el catálogo..."></textarea>
       </div>
       <div class="form-group">
-        <label>Descripción larga <small>(aparece en el perfil)</small></label>
+        <label>Descripción larga</label>
         <textarea id="pAbout" rows="4" placeholder="Historia, experiencia, valores del equipo..."></textarea>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>WhatsApp * <small>(sin espacios ni guiones)</small></label>
+          <label>WhatsApp *</label>
           <input type="text" id="pWhatsapp" placeholder="5491123456789">
-          <small class="hint">Formato: código país + código área + número. Ej: 5491123456789</small>
+          <small class="hint">Formato: código país + código área + número.</small>
         </div>
         <div class="form-group">
           <label>Email</label>
@@ -173,77 +154,69 @@
           </select>
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>¿Destacado?</label>
+          <select id="pFeatured">
+            <option value="false">No</option>
+            <option value="true">Sí</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Color avatar</label>
+          <input type="text" id="pColor" value="#00897b" placeholder="#00897b">
+        </div>
+      </div>
     </div>
 
-    <!-- TAB: servicios -->
     <div id="tab-services" class="am-tab-content hidden">
       <div class="form-group">
-        <label>Categorías / Servicios que ofrece</label>
+        <label>Categorías / Servicios</label>
         <div class="service-checkboxes" id="serviceChecks">
-          <label class="check-item"><input type="checkbox" value="Limpieza hogareña"> Limpieza hogareña</label>
-          <label class="check-item"><input type="checkbox" value="Limpieza de oficinas"> Limpieza de oficinas</label>
-          <label class="check-item"><input type="checkbox" value="Limpieza profunda"> Limpieza profunda</label>
-          <label class="check-item"><input type="checkbox" value="Post-obra"> Post-obra</label>
-          <label class="check-item"><input type="checkbox" value="Mudanza"> Mudanza</label>
-          <label class="check-item"><input type="checkbox" value="Servicio de mucama"> Servicio de mucama</label>
-          <label class="check-item"><input type="checkbox" value="Limpieza ecológica"> Limpieza ecológica</label>
-          <label class="check-item"><input type="checkbox" value="Industrial"> Industrial</label>
+          <label class="check-item"><input type="checkbox" value="Limpieza hogareña"><span>Limpieza hogareña</span></label>
+          <label class="check-item"><input type="checkbox" value="Limpieza de oficinas"><span>Limpieza de oficinas</span></label>
+          <label class="check-item"><input type="checkbox" value="Limpieza profunda"><span>Limpieza profunda</span></label>
+          <label class="check-item"><input type="checkbox" value="Post-obra"><span>Post-obra</span></label>
+          <label class="check-item"><input type="checkbox" value="Mudanza"><span>Mudanza</span></label>
+          <label class="check-item"><input type="checkbox" value="Servicio de mucama"><span>Servicio de mucama</span></label>
+          <label class="check-item"><input type="checkbox" value="Limpieza ecológica"><span>Limpieza ecológica</span></label>
+          <label class="check-item"><input type="checkbox" value="Industrial"><span>Industrial</span></label>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Precio desde (ARS)</label>
+          <label>Precio desde</label>
           <input type="number" id="pPriceFrom" placeholder="10000">
         </div>
         <div class="form-group">
-          <label>Precio hasta (ARS, opcional)</label>
+          <label>Precio hasta</label>
           <input type="number" id="pPriceTo" placeholder="50000">
         </div>
       </div>
       <div class="form-group">
         <label>Información adicional</label>
-        <div class="extra-info-list" id="extraInfoList">
-          <!-- items dinámicos -->
-        </div>
-        <button class="btn-outline small" onclick="addExtraInfo()">+ Agregar dato</button>
-        <small class="hint">Ej: "Productos ecológicos: Sí", "Días de trabajo: Lun a Sáb"</small>
+        <div class="extra-info-list" id="extraInfoList"></div>
+        <button class="btn-outline small" type="button" onclick="addExtraInfo()">+ Agregar dato</button>
       </div>
     </div>
 
-    <!-- TAB: media -->
     <div id="tab-media" class="am-tab-content hidden">
       <div class="form-group">
         <label>URL del logo / foto de perfil</label>
         <input type="url" id="pAvatar" placeholder="https://...">
-        <small class="hint">URL de imagen. Recomendado: subir a <a href="https://imgur.com" target="_blank">imgur.com</a> y pegar el link directo.</small>
       </div>
       <div class="form-group">
-        <label>Color de fondo del avatar <small>(si no tiene foto)</small></label>
-        <div class="color-palette" id="colorPalette">
-          <span class="cp-item selected" data-color="#00897b" style="background:#00897b"></span>
-          <span class="cp-item" data-color="#2196f3" style="background:#2196f3"></span>
-          <span class="cp-item" data-color="#9c27b0" style="background:#9c27b0"></span>
-          <span class="cp-item" data-color="#ff5722" style="background:#ff5722"></span>
-          <span class="cp-item" data-color="#ff9800" style="background:#ff9800"></span>
-          <span class="cp-item" data-color="#e91e63" style="background:#e91e63"></span>
-          <span class="cp-item" data-color="#607d8b" style="background:#607d8b"></span>
-        </div>
-        <input type="hidden" id="pColor" value="#00897b">
-      </div>
-      <div class="form-group">
-        <label>Fotos de trabajos (galería) – una URL por línea</label>
-        <textarea id="pGallery" rows="5" placeholder="https://imagen1.jpg&#10;https://imagen2.jpg&#10;..."></textarea>
-        <small class="hint">Pegá URLs de imágenes, una por línea.</small>
+        <label>Fotos de trabajos (una URL por línea)</label>
+        <textarea id="pGallery" rows="6" placeholder="https://imagen1.jpg&#10;https://imagen2.jpg"></textarea>
       </div>
     </div>
   </div>
   <div class="am-footer">
-    <button class="btn-outline" onclick="closeProviderModal()">Cancelar</button>
-    <button class="btn-primary" onclick="saveProvider()">Guardar proveedor</button>
+    <button class="btn-outline" type="button" onclick="closeProviderModal()">Cancelar</button>
+    <button class="btn-primary" type="button" onclick="saveProvider()">Guardar proveedor</button>
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast hidden" id="adminToast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
